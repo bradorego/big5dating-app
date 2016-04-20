@@ -1,0 +1,18 @@
+<!--
+Create tabs with an icon and label, using the tabs-positive style.
+Each tab's child <ion-nav-view> directive will have its own
+navigation history that also transitions its views in and out.
+-->
+<ion-nav-bar class="bar-positive"></ion-nav-bar>
+
+<ion-nav-view name="tabs" animation="no-animation" nav-transition="none" nav-direction="forward">
+  <ion-nav-buttons side="right">
+    <i class="mi-icon" ng-class="tabsVM.wifiClass"></i>
+  </ion-nav-buttons>
+</ion-nav-view>
+<ion-tabs class="tabs-icon-top tabs-color-active-positive">
+  <ion-tab title="Home" icon="ion-home" ui-sref="app.dash" nav-transition="none" nav-direction="forward"></ion-tab>
+  <ion-tab title="Chat" icon="ion-chatboxes" ui-sref="app.chats" nav-transition="none" nav-direction="forward"></ion-tab>
+  <ion-tab title="Settings" icon="ion-gear-b" ui-sref="app.settings" nav-transition="none" nav-direction="forward"></ion-tab>
+</ion-tabs>
+
