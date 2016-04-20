@@ -49,5 +49,5 @@ var chatsFactory = function () {
   return Chats;
 };
 
-angular.module('Chats')
+angular.module('User')
   .factory('Chats', chatsFactory);

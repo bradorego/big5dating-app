@@ -28,9 +28,13 @@ var appRun = [
         window.StatusBar.styleDefault();
       }
     });
-
-    /*jslint unparam:true */
-    $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams, options) {
+    /*jslint unparam: true*/
+    $rootScope.$on('$stateChangeError', function (event, toState, toParams, fromState, fromParams, error) {
+      console.log("stateChangeError", error);
+      $ionicLoading.hide();
+      $rootScope.cancelTimeout();
+    });
+    $rootScope.$on('$stateChangeStart', function () { ///event, toState, toParams, fromState, fromParams, options) {
       stateTimeout = $timeout(function () { //If transition takes longer than 30 seconds, timeout.
         $ionicLoading.hide();
         // $ionicPopup.alert({'title': 'Timed Out', 'template': 'Communication with the server timed out. Please check your connection and try again.'});
@@ -40,6 +44,9 @@ var appRun = [
           }
         });
       }, 30000);
+    });
+    $rootScope.$on('$stateChangeSuccess', function () {
+      $rootScope.cancelTimeout();
     });
     /*jslint unparam:false */
 
@@ -56,19 +63,19 @@ var appRun = [
     function ($stateProvider, $urlRouterProvider, $httpProvider) {
       // $ionicConfigProvider.views.transition('android');
       'use strict';
-      // $httpProvider.interceptors.push([
-      //   '$q',
-      //   '$injector',
-      //   function ($q, $injector) {
-      //     return {
-      //       request: function (config) {
-      //         ///Add an http aborter
-      //         var abort = $q.defer();
-      //         config.abort = abort;
-      //         config.timeout = abort.promise;
-      //       }
-      //     };
-      //   }]);
+      $httpProvider.interceptors.push([
+        '$q',
+        function ($q) {
+          return {
+            request: function (config) {
+              ///Add an http aborter
+              var abort = $q.defer();
+              config.abort = abort;
+              config.timeout = abort.promise;
+              return config;
+            }
+          };
+        }]);
       $stateProvider.state('app', {
         url: '/app',
         abstract: true,
@@ -83,10 +90,9 @@ var appRun = [
     angular.noop();
   }];
 
-angular.module('Chats', []);
-angular.module('Tabs', ['Chats']);
+angular.module('Tabs', []);
 angular.module('User', []);
-angular.module('starter', ['ionic', 'User', 'Tabs', 'Chats'])
+angular.module('starter', ['ionic', 'User', 'Tabs'])
   .controller('appController', appCtrl)
   .run(appRun)
   .config(appConfig);

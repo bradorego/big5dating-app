@@ -5,10 +5,6 @@ var accountCtrl = [
   function () {
     'use strict';
     var vm = this;
-
-    vm.enableFriends = true;
-
-    vm.selected = {};
   }],
   accountResolve = {},
   accountConfig = [

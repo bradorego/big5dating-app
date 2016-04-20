@@ -1,0 +1,22 @@
+.survey {
+  .profile {
+    text-align: center;
+    img {
+      margin: 10px auto;
+      border-radius: 100px;
+    }
+    border-bottom: 2px solid grey;
+  }
+
+  .button-bar {
+    & > .button {
+      padding: 10px;
+      line-height: 1.5em;
+      font-size: 14px;
+      white-space: initial;
+      @media (max-width: 480px) {
+        font-size: 12px;
+      }
+    }
+  }
+}

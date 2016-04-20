@@ -9738,3 +9738,19 @@ ion-nav-view,
 [nav-view-transition="ios"][nav-view-direction="forward"],
 [nav-view-transition="ios"][nav-view-direction="back"] {
   background: white; }
+
+.survey .profile {
+  text-align: center;
+  border-bottom: 2px solid grey; }
+  .survey .profile img {
+    margin: 10px auto;
+    border-radius: 100px; }
+
+.survey .button-bar > .button {
+  padding: 10px;
+  line-height: 1.5em;
+  font-size: 14px;
+  white-space: initial; }
+  @media (max-width: 480px) {
+    .survey .button-bar > .button {
+      font-size: 12px; } }

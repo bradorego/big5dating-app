@@ -1,9 +1,22 @@
 /// Dash.tabs.js
 
 var DashCtrl = [
-  function () {
+  '$scope',
+  'Survey',
+  function ($scope, Survey) {
     'use strict';
-    angular.noop();
+    var vm = this;
+    Survey.init($scope);
+    $scope.Survey = Survey;
+    vm.enableFriends = true;
+    vm.showSurvey = function () {
+      vm.friend = {
+        name: "Brad Orego",
+        email: "me@bradorego.com"
+      };
+      Survey.show();
+    };
+    vm.selected = {};
   }],
   dashResolve = {},
   dashConfig = [
