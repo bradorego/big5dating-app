@@ -3,19 +3,27 @@
 var DashCtrl = [
   '$scope',
   'Survey',
-  function ($scope, Survey) {
+  'User',
+  function ($scope, Survey, User) {
     'use strict';
     var vm = this;
     Survey.init($scope);
     $scope.Survey = Survey;
-    vm.enableFriends = true;
-    vm.showSurvey = function () {
-      vm.friend = {
-        name: "Brad Orego",
-        email: "me@bradorego.com"
-      };
+    console.log(User.cache());
+    vm.friends = User.cache().friends;
+    vm.showSurvey = function (friend) {
+      vm.friend = friend;
       Survey.show();
     };
+    $scope.$on('surveySubmitted', function (event, friend) {
+      var i = 0;
+      for (i = 0; i < vm.friends.length; i++) {
+        if (vm.friends[i].email === friend.email) {
+          vm.friends.splice(i, 1);
+          break;
+        }
+      }
+    });
     vm.selected = {};
   }],
   dashResolve = {},

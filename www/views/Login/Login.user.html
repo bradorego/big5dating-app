@@ -1,23 +1,19 @@
 <ion-pane>
   <ion-content class="padding has-footer">
     <h2 class="text-center balanced">Santa Fe Classic II</h2> <!-- <img class="row" src="img/logo.png" /> -->
-    <form class="list" name="signInForm">
+    <form class="list" name="signInForm" ng-submit="vm.signIn()">
       <label class="item item-input">
         <span class="input-label">Email</span>
-        <input type="email" ng-model="vm.user.email" required/>
+        <input type="email" ng-model="vm.email" required/>
       </label>
       <label class="item item-input">
         <span class="input-label">Password</span>
-        <input type="password" ng-model="vm.user.password" required/>
+        <input type="password" ng-model="vm.password" required/>
       </label>
       <div class="text-center padding">
         <a ui-sref="forgotPassword">Forgot password?</a>
       </div>
-      <button class="button button-block button-balanced" ui-sref="app.dash">Log In</button>
+      <button class="button button-block button-balanced">Let's Go!</button>
     </form>
-    <div class="text-center">
-      Need an account?
-    </div>
-    <a class="button button-block" ui-sref="signUp">Sign Up</a>
   </ion-content>
 </ion-pane>

@@ -1,6 +1,8 @@
 <ion-view view-title="Dashboard">
   <ion-content class="padding">
     <h2>Welcome to Ionic</h2>
-    <button class="button button-assertive button-block" ng-click="vm.showSurvey()">Survey</button>
+    <div class="fill-surveys" ng-repeat="friend in vm.friends">
+      <button class="button button-calm button-block" ng-click="vm.showSurvey(friend)">Fill out a survey for {{friend.name}}</button>
+    </div>
   </ion-content>
 </ion-view>

@@ -3,7 +3,9 @@
 var surveyFactory = [
   '$ionicModal',
   '$http',
-  function ($ionicModal, $http) {
+  'API_ROOT',
+  'User',
+  function ($ionicModal, $http, API_ROOT, User) {
     'use strict';
     var Survey = {},
       modalRef = {},
@@ -14,7 +16,7 @@ var surveyFactory = [
       $ionicModal.fromTemplateUrl('views/Survey/Survey.user.html', {
         scope: scope,
         animation: 'slide-in-up'
-      }).then(function(modal) {
+      }).then(function (modal) {
         modalRef = modal;
       });
     };
@@ -25,16 +27,21 @@ var surveyFactory = [
       modalRef.hide();
       Survey.init(localScope);
     };
-    Survey.submit = function () {
-      if (!Survey.questions.every(function (el) {return el > 0;})) { /// if they aren't all filled in, reject
+    Survey.submit = function (friend) {
+      if (!Survey.questions.every(function (el) {return el > 0; })) { /// if they aren't all filled in, reject
         return false;
       }
-      $http.post('http://localhost:8000/api/v1/users/survey', {
-        from: 'test1@bradorego.com',
-        for: 'me@bradorego.com',
+      console.log(friend);
+      $http.post(API_ROOT + '/users/survey', {
+        from: User.cache().email,
+        for: friend.email,
         questions: Survey.questions
       }).then(function (resp) {
-        Survey.hide();
+        console.log(resp);
+        if (resp.status === 200) {
+          localScope.$broadcast('surveySubmitted', friend);
+          Survey.hide();
+        }
       }, function (err) {
         console.log(err);
       });

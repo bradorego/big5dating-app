@@ -55,7 +55,21 @@ var appRun = [
       $timeout.cancel(stateTimeout);
     };
   }],
-  appResolve = {},
+  appResolve = {
+    Auth: [
+      'User',
+      '$state',
+      function (User, $state) {
+        'use strict';
+        return User.login()
+          .then(function (user) {
+            return user;
+          }, function (err) {
+            console.log(err);
+            return $state.go('login');
+          });
+      }]
+  },
   appConfig = [
     '$stateProvider',
     '$urlRouterProvider',
@@ -85,14 +99,20 @@ var appRun = [
       });
       $urlRouterProvider.otherwise('/login');
     }],
-  appCtrl = [function () {
-    'use strict';
-    angular.noop();
-  }];
+  appCtrl = [
+    '$state',
+    function ($state) {
+      'use strict';
+      var appVM = this;
+      appVM.signOut = function () {
+        $state.go('login');
+      };
+    }];
 
 angular.module('Tabs', []);
-angular.module('User', []);
+angular.module('User', ['ngStorage']);
 angular.module('starter', ['ionic', 'User', 'Tabs'])
   .controller('appController', appCtrl)
   .run(appRun)
-  .config(appConfig);
+  .config(appConfig)
+  .value("API_ROOT", "http://localhost:8000/api/v1");

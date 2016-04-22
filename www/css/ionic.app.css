@@ -9743,8 +9743,8 @@ ion-nav-view,
   text-align: center;
   border-bottom: 2px solid grey; }
   .survey .profile img {
-    margin: 10px auto;
-    border-radius: 100px; }
+    border-radius: 50%;
+    width: 75px; }
 
 .survey .button-bar > .button {
   padding: 10px;

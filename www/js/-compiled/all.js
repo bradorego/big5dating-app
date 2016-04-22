@@ -55,7 +55,21 @@ var appRun = [
       $timeout.cancel(stateTimeout);
     };
   }],
-  appResolve = {},
+  appResolve = {
+    Auth: [
+      'User',
+      '$state',
+      function (User, $state) {
+        'use strict';
+        return User.login()
+          .then(function (user) {
+            return user;
+          }, function (err) {
+            console.log(err);
+            return $state.go('login');
+          });
+      }]
+  },
   appConfig = [
     '$stateProvider',
     '$urlRouterProvider',
@@ -85,17 +99,23 @@ var appRun = [
       });
       $urlRouterProvider.otherwise('/login');
     }],
-  appCtrl = [function () {
-    'use strict';
-    angular.noop();
-  }];
+  appCtrl = [
+    '$state',
+    function ($state) {
+      'use strict';
+      var appVM = this;
+      appVM.signOut = function () {
+        $state.go('login');
+      };
+    }];
 
 angular.module('Tabs', []);
-angular.module('User', []);
+angular.module('User', ['ngStorage']);
 angular.module('starter', ['ionic', 'User', 'Tabs'])
   .controller('appController', appCtrl)
   .run(appRun)
-  .config(appConfig);
+  .config(appConfig)
+  .value("API_ROOT", "http://localhost:8000/api/v1");
 
 var chatsFactory = function () {
   'use strict';
@@ -156,7 +176,9 @@ angular.module('User')
 var surveyFactory = [
   '$ionicModal',
   '$http',
-  function ($ionicModal, $http) {
+  'API_ROOT',
+  'User',
+  function ($ionicModal, $http, API_ROOT, User) {
     'use strict';
     var Survey = {},
       modalRef = {},
@@ -167,7 +189,7 @@ var surveyFactory = [
       $ionicModal.fromTemplateUrl('views/Survey/Survey.user.html', {
         scope: scope,
         animation: 'slide-in-up'
-      }).then(function(modal) {
+      }).then(function (modal) {
         modalRef = modal;
       });
     };
@@ -178,16 +200,21 @@ var surveyFactory = [
       modalRef.hide();
       Survey.init(localScope);
     };
-    Survey.submit = function () {
-      if (!Survey.questions.every(function (el) {return el > 0;})) { /// if they aren't all filled in, reject
+    Survey.submit = function (friend) {
+      if (!Survey.questions.every(function (el) {return el > 0; })) { /// if they aren't all filled in, reject
         return false;
       }
-      $http.post('http://localhost:8000/api/v1/users/survey', {
-        from: 'test1@bradorego.com',
-        for: 'me@bradorego.com',
+      console.log(friend);
+      $http.post(API_ROOT + '/users/survey', {
+        from: User.cache().email,
+        for: friend.email,
         questions: Survey.questions
       }).then(function (resp) {
-        Survey.hide();
+        console.log(resp);
+        if (resp.status === 200) {
+          localScope.$broadcast('surveySubmitted', friend);
+          Survey.hide();
+        }
       }, function (err) {
         console.log(err);
       });
@@ -198,11 +225,123 @@ var surveyFactory = [
 angular.module('User')
   .service('Survey', surveyFactory);
 
+/// User.user.js
+
+var userFactory = [
+  '$http',
+  'API_ROOT',
+  '$localStorage',
+  '$q',
+  function ($http, API_ROOT, $localStorage, $q) {
+    'use strict';
+    var User = {},
+      cached = {};
+    User.create = function (obj) {
+      var d = $q.defer();
+      $http.post(API_ROOT + "/users", {
+        email: obj.email,
+        password: obj.password
+      }).then(function (resp) {
+        $localStorage.auth = window.btoa(obj.email + ":big5:" + obj.password);
+        cached = resp.data;
+        d.resolve(resp.data);
+      }, function (err) {
+        d.reject(err);
+      });
+      return d.promise;
+    };
+    User.login = function (obj) {
+      var d = $q.defer(),
+        creds = [];
+      if (!obj && $localStorage.auth) {
+        creds = window.atob($localStorage.auth).split(":big5:");
+        obj = {
+          email: creds[0],
+          password: creds[1]
+        };
+      }
+      $http.put(API_ROOT + "/users", {
+        email: obj.email,
+        password: obj.password
+      }).then(function (resp) {
+        $localStorage.auth = window.btoa(obj.email + ":big5:" + obj.password);
+        cached = resp.data;
+        d.resolve(resp.data);
+      }, function (err) {
+        d.reject(err);
+      });
+      return d.promise;
+    };
+    User.refresh = function () {
+      var d = $q.defer();
+      $http.get(API_ROOT + "/users", {
+        email: window.atob($localStorage.auth).split(":big5:")[0]
+      }).then(function (resp) {
+        cached = resp.data;
+        d.resolve(resp.data);
+      }, function (err) {
+        d.reject(err);
+      });
+      return d.promise;
+    };
+    User.getFriends = function (obj) {
+      var d = $q.defer();
+      if (!obj) {
+        obj.email = cached.email;
+      }
+      $http.get(API_ROOT + "/users/friends", {
+        email: obj.email
+      }).then(function (resp) {
+        d.resolve(resp.data);
+      }, function (err) {
+        d.reject(err);
+      });
+      return d.promise;
+    };
+    User.cache = function () {
+      return cached;
+    };
+    User.isLoggedIn = function () {
+      return $localStorage.auth;
+    };
+    User.logout = function () {
+      delete $localStorage.auth;
+      return true;
+    };
+    return User;
+  }];
+
+angular.module('User')
+  .service('User', userFactory);
+
 /// Login.User.js
 
-var loginCtrl = [function () {
+var loginCtrl = [
+  'User',
+  '$state',
+  '$scope',
+  function (User, $state, $scope) {
     'use strict';
-    angular.noop();
+    var vm = this;
+    $scope.$on('$ionicView.enter', function () {
+      User.logout();
+    });
+    vm.signIn = function () {
+      User.login({email: vm.email, password: vm.password})
+        .then(function () { ///resp) {
+          $state.go('app.dash');
+        }, function (err) {
+          if (err.status === 404) { /// user not found - let's make one!
+            User.create({email: vm.email, password: vm.password})
+              .then(function () {
+                $state.go('app.dash');
+              }, function (err) {
+                console.warn(err);
+              });
+          }
+          console.warn(err);
+        });
+    };
   }],
   loginConfig = [
     '$stateProvider',
@@ -274,19 +413,27 @@ angular.module('Tabs')
 var DashCtrl = [
   '$scope',
   'Survey',
-  function ($scope, Survey) {
+  'User',
+  function ($scope, Survey, User) {
     'use strict';
     var vm = this;
     Survey.init($scope);
     $scope.Survey = Survey;
-    vm.enableFriends = true;
-    vm.showSurvey = function () {
-      vm.friend = {
-        name: "Brad Orego",
-        email: "me@bradorego.com"
-      };
+    console.log(User.cache());
+    vm.friends = User.cache().friends;
+    vm.showSurvey = function (friend) {
+      vm.friend = friend;
       Survey.show();
     };
+    $scope.$on('surveySubmitted', function (event, friend) {
+      var i = 0;
+      for (i = 0; i < vm.friends.length; i++) {
+        if (vm.friends[i].email === friend.email) {
+          vm.friends.splice(i, 1);
+          break;
+        }
+      }
+    });
     vm.selected = {};
   }],
   dashResolve = {},

@@ -1,8 +1,31 @@
 /// Login.User.js
 
-var loginCtrl = [function () {
+var loginCtrl = [
+  'User',
+  '$state',
+  '$scope',
+  function (User, $state, $scope) {
     'use strict';
-    angular.noop();
+    var vm = this;
+    $scope.$on('$ionicView.enter', function () {
+      User.logout();
+    });
+    vm.signIn = function () {
+      User.login({email: vm.email, password: vm.password})
+        .then(function () { ///resp) {
+          $state.go('app.dash');
+        }, function (err) {
+          if (err.status === 404) { /// user not found - let's make one!
+            User.create({email: vm.email, password: vm.password})
+              .then(function () {
+                $state.go('app.dash');
+              }, function (err) {
+                console.warn(err);
+              });
+          }
+          console.warn(err);
+        });
+    };
   }],
   loginConfig = [
     '$stateProvider',
